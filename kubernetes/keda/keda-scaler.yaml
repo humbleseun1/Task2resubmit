@@ -1,0 +1,35 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: product-service-scaler
+  namespace: microservices-demo
+spec:
+  scaleTargetRef:
+    name: product-service
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+  - type: metrics-api
+    metadata:
+      targetValue: "50"
+      url: "http://prometheus-server.monitoring.svc.cluster.local:9090"
+      valueLocation: 'data.result[0].value[1]'
+      query: sum(rate(http_requests_total{service="product-service"}[2m]))
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: order-service-scaler
+  namespace: microservices-demo
+spec:
+  scaleTargetRef:
+    name: order-service
+  minReplicaCount: 1
+  maxReplicaCount: 10
+  triggers:
+  - type: metrics-api
+    metadata:
+      targetValue: "50"
+      url: "http://prometheus-server.monitoring.svc.cluster.local:9090"
+      valueLocation: 'data.result[0].value[1]'
+      query: sum(rate(http_requests_total{service="order-service"}[2m]))

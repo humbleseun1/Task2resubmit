@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: yugabytedb
+  namespace: microservices-demo
+spec:
+  serviceName: yugabytedb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: yugabytedb
+  template:
+    metadata:
+      labels:
+        app: yugabytedb
+    spec:
+      containers:
+      - name: yugabytedb
+        image: yugabytedb/yugabyte:latest
+        ports:
+        - containerPort: 5433
+          name: ysql
+        - containerPort: 7000
+          name: master
+        - containerPort: 9000
+          name: tserver
+        command:
+        - "/home/yugabyte/bin/yugabyted"
+        - "start"
+        - "--base_dir=/mnt/data"
+        - "--daemon=false"
+        volumeMounts:
+        - name: datadir
+          mountPath: /mnt/data
+  volumeClaimTemplates:
+  - metadata:
+      name: datadir
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: yugabytedb
+  namespace: microservices-demo
+  labels:
+    app: yugabytedb
+spec:
+  ports:
+  - port: 5433
+    name: ysql
+  - port: 7000
+    name: master
+  - port: 9000
+    name: tserver
+  clusterIP: None
+  selector:
+    app: yugabytedb

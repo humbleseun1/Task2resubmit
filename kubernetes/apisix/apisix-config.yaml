@@ -1,0 +1,73 @@
+apiVersion: apisix.apache.org/v2
+kind: ApisixRoute
+metadata:
+  name: microservices-route
+  namespace: microservices-demo
+spec:
+  http:
+  - name: product-service-route
+    match:
+      hosts:
+      - api.example.com
+      paths:
+      - /products/*
+    backends:
+    - serviceName: product-service
+      servicePort: 8080
+    plugins:
+    - name: cors
+      enable: true
+    - name: prometheus
+      enable: true
+  - name: order-service-route
+    match:
+      hosts:
+      - api.example.com
+      paths:
+      - /orders/*
+    backends:
+    - serviceName: order-service
+      servicePort: 8080
+    plugins:
+    - name: cors
+      enable: true
+    - name: prometheus
+      enable: true
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixUpstream
+metadata:
+  name: product-service-upstream
+  namespace: microservices-demo
+spec:
+  loadbalancer:
+    type: roundrobin
+  healthCheck:
+    active:
+      type: http
+      httpPath: /health
+      healthy:
+        interval: 5
+        successes: 1
+      unhealthy:
+        interval: 5
+        httpFailures: 2
+---
+apiVersion: apisix.apache.org/v2
+kind: ApisixUpstream
+metadata:
+  name: order-service-upstream
+  namespace: microservices-demo
+spec:
+  loadbalancer:
+    type: roundrobin
+  healthCheck:
+    active:
+      type: http
+      httpPath: /health
+      healthy:
+        interval: 5
+        successes: 1
+      unhealthy:
+        interval: 5
+        httpFailures: 2
